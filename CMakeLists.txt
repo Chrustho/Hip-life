@@ -7,6 +7,9 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
+add_library(hiplife_core STATIC src/sim/cpu_simulation.cpp src/sim/hip_unavailable.cpp)
+target_include_directories(hiplife_core PUBLIC src)
+
 find_package(raylib QUIET)
 if(NOT raylib_FOUND)
     find_package(PkgConfig QUIET)
