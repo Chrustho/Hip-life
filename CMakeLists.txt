@@ -25,3 +25,8 @@ if(raylib_FOUND)
 else()
     target_link_libraries(hip-life PRIVATE PkgConfig::RAYLIB)
 endif()
+
+enable_testing()
+add_executable(hiplife_invariants tests/invariants.cpp)
+target_link_libraries(hiplife_invariants PRIVATE hiplife_core)
+add_test(NAME invariants COMMAND hiplife_invariants)
