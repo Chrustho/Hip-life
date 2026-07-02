@@ -46,7 +46,7 @@ if(NOT raylib_FOUND)
     endif()
 endif()
 
-add_executable(hip-life src/main.cpp)
+add_executable(hip-life src/main.cpp src/render/raylib_renderer.cpp)
 target_include_directories(hip-life PRIVATE src)
 if(raylib_FOUND)
     target_link_libraries(hip-life PRIVATE raylib)
