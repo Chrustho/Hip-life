@@ -23,7 +23,7 @@ if(HIPLIFE_ENABLE_HIP)
     endif()
 endif()
 
-set(HL_CORE_SOURCES src/sim/cpu_simulation.cpp)
+set(HL_CORE_SOURCES src/sim/cpu_simulation.cpp src/io/rle.cpp src/io/patterns.cpp)
 if(HL_HAVE_HIP)
     list(APPEND HL_CORE_SOURCES src/sim/life.hip)
 else()
