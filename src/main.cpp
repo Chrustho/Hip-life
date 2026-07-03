@@ -1,24 +1,16 @@
 #include "raylib.h"
 
+#include "app/app.hpp"
+
 int main() {
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT);
     InitWindow(1280, 800, "hip-life");
-    SetTargetFPS(60);
+    SetTargetFPS(120);
 
-    Image img = GenImageChecked(64, 64, 8, 8, Color{28, 28, 34, 255}, Color{40, 40, 48, 255});
-    Texture2D tex = LoadTextureFromImage(img);
-    UnloadImage(img);
-    SetTextureFilter(tex, TEXTURE_FILTER_POINT);
+    hl::App app;
+    app.init(256, 160);
+    app.run();
 
-    while (!WindowShouldClose()) {
-        BeginDrawing();
-        ClearBackground(Color{12, 12, 15, 255});
-        DrawTexturePro(tex, Rectangle{0, 0, 64, 64},
-                       Rectangle{0, 0, float(GetScreenWidth()), float(GetScreenHeight())},
-                       Vector2{0, 0}, 0.0f, WHITE);
-        EndDrawing();
-    }
-
-    UnloadTexture(tex);
     CloseWindow();
     return 0;
 }

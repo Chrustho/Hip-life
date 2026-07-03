@@ -46,13 +46,24 @@ if(NOT raylib_FOUND)
     endif()
 endif()
 
-add_executable(hip-life src/main.cpp src/render/raylib_renderer.cpp)
-target_include_directories(hip-life PRIVATE src)
-if(raylib_FOUND)
-    target_link_libraries(hip-life PRIVATE raylib)
+if(raylib_FOUND OR RAYLIB_FOUND)
+    add_executable(hip-life
+        src/main.cpp
+        src/app/app.cpp
+        src/render/raylib_renderer.cpp
+        src/ui/panels.cpp
+        src/ui/raygui_impl.cpp)
+    target_include_directories(hip-life PRIVATE src third_party/raygui)
+    target_link_libraries(hip-life PRIVATE hiplife_core)
+    if(raylib_FOUND)
+        target_link_libraries(hip-life PRIVATE raylib)
+    else()
+        target_link_libraries(hip-life PRIVATE PkgConfig::RAYLIB)
+    endif()
 else()
-    target_link_libraries(hip-life PRIVATE PkgConfig::RAYLIB)
+    message(STATUS "hip-life: raylib not found, interactive app target disabled")
 endif()
+
 
 enable_testing()
 add_executable(hiplife_invariants tests/invariants.cpp)
