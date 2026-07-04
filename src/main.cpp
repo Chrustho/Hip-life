@@ -3,7 +3,7 @@
 #include "app/app.hpp"
 
 int main() {
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT);
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
     InitWindow(1280, 800, "hip-life");
     SetTargetFPS(120);
 

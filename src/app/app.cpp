@@ -34,16 +34,20 @@ void App::init(int grid_w, int grid_h) {
     renderer = make_raylib_renderer();
     renderer->resize(gw, gh);
 
-    camera.zoom = 1.0f;
     camera.rotation = 0.0f;
-    center_view();
+    fit_view();
+    apply_theme();
 }
 
-void App::center_view() {
+void App::fit_view() {
+    float avail_w = GetScreenWidth() - kPanelWidth;
+    float avail_h = float(GetScreenHeight());
     float world_w = gw * cell_size;
     float world_h = gh * cell_size;
-    camera.offset = Vector2{GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
-    camera.target = Vector2{world_w / 2.0f, world_h / 2.0f};
+    float z = fminf(avail_w * 0.9f / world_w, avail_h * 0.9f / world_h);
+    camera.zoom = z > 0.0f ? z : 1.0f;
+    camera.offset = Vector2{kPanelWidth + avail_w * 0.5f, avail_h * 0.5f};
+    camera.target = Vector2{world_w * 0.5f, world_h * 0.5f};
 }
 
 void App::ui_step() { step_once(); }
@@ -196,35 +200,59 @@ void App::advance(double dt) {
     }
 }
 
-void App::run() {
-    while (!WindowShouldClose()) {
-        handle_input();
-        advance(GetFrameTime());
+void App::draw_crt_overlay() const {
+    int pw = int(kPanelWidth);
+    int sw = GetScreenWidth();
+    int sh = GetScreenHeight();
+    for (int yy = 0; yy < sh; yy += 3) DrawLine(pw, yy, sw, yy, Color{0, 0, 0, 46});
 
-        renderer->update(sim->hostCells(), sim->hostAges(), heatmap);
-        population = sim->population();
+    Rectangle vp{kPanelWidth + 8, 8, sw - kPanelWidth - 16, sh - 16.0f};
+    DrawRectangleLinesEx(vp, 1.0f, Color{122, 90, 18, 120});
+    const Color amber{255, 176, 0, 220};
+    int t = 16;
+    auto tick = [&](float cx, float cy, int dx, int dy) {
+        DrawLine(int(cx), int(cy), int(cx) + dx, int(cy), amber);
+        DrawLine(int(cx), int(cy), int(cx), int(cy) + dy, amber);
+    };
+    tick(vp.x, vp.y, t, t);
+    tick(vp.x + vp.width, vp.y, -t, t);
+    tick(vp.x, vp.y + vp.height, t, -t);
+    tick(vp.x + vp.width, vp.y + vp.height, -t, -t);
+}
 
-        BeginDrawing();
-        ClearBackground(Color{12, 12, 15, 255});
+void App::do_frame() {
+    if (IsWindowResized()) fit_view();
+    handle_input();
+    advance(GetFrameTime());
 
-        BeginMode2D(camera);
-        renderer->draw(cell_size);
-        DrawRectangleLinesEx(Rectangle{0, 0, gw * cell_size, gh * cell_size}, 1.0f / camera.zoom,
-                             Color{60, 60, 70, 255});
-        if (!ui_capture) {
-            int cx, cy;
-            if (cell_at_cursor(cx, cy)) {
-                int r = brush / 2;
-                Rectangle b{(cx - r) * cell_size, (cy - r) * cell_size, brush * cell_size,
-                            brush * cell_size};
-                DrawRectangleLinesEx(b, 1.0f / camera.zoom, Color{240, 220, 90, 200});
-            }
+    renderer->update(sim->hostCells(), sim->hostAges(), heatmap);
+    population = sim->population();
+
+    BeginDrawing();
+    ClearBackground(Color{10, 10, 8, 255});
+
+    BeginMode2D(camera);
+    renderer->draw(cell_size);
+    DrawRectangleLinesEx(Rectangle{0, 0, gw * cell_size, gh * cell_size}, 1.0f / camera.zoom,
+                         Color{58, 50, 36, 255});
+    if (!ui_capture) {
+        int cx, cy;
+        if (cell_at_cursor(cx, cy)) {
+            int r = brush / 2;
+            Rectangle b{(cx - r) * cell_size, (cy - r) * cell_size, brush * cell_size,
+                        brush * cell_size};
+            DrawRectangleLinesEx(b, 1.0f / camera.zoom, Color{255, 176, 0, 220});
         }
-        EndMode2D();
-
-        draw_ui(*this);
-        EndDrawing();
     }
+    EndMode2D();
+
+    draw_crt_overlay();
+    draw_ui(*this);
+    EndDrawing();
+}
+
+void App::run() {
+    while (!WindowShouldClose()) do_frame();
 }
 
 }

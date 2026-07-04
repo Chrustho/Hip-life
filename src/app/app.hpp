@@ -54,10 +54,12 @@ private:
     void record_hash();
     void handle_input();
     void advance(double dt);
+    void do_frame();
     void paint(bool alive);
     void stamp_pattern();
     bool cell_at_cursor(int& cx, int& cy) const;
-    void center_view();
+    void draw_crt_overlay() const;
+    void fit_view();
 
     double accumulator_ = 0.0;
     std::deque<uint64_t> hashes_;
