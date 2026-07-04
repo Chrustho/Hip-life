@@ -1,0 +1,19 @@
+Third-party components used by hip-life.
+
+raylib
+  https://github.com/raysan5/raylib
+  Copyright (c) 2013-2024 Ramon Santamaria (@raysan5)
+  zlib/libpng license
+  Linked as an external dependency (not redistributed).
+
+raygui
+  https://github.com/raysan5/raygui
+  Copyright (c) 2014-2023 Ramon Santamaria (@raysan5)
+  zlib/libpng license
+  Vendored at third_party/raygui/raygui.h (license header kept intact).
+
+HIP / ROCm runtime
+  https://github.com/ROCm/HIP
+  Copyright (c) Advanced Micro Devices, Inc.
+  MIT license
+  Build/runtime dependency (not redistributed).
