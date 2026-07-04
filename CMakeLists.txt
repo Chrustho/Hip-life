@@ -64,6 +64,12 @@ else()
     message(STATUS "hip-life: raylib not found, interactive app target disabled")
 endif()
 
+if(HL_HAVE_HIP AND EXISTS "${CMAKE_SOURCE_DIR}/src/sim/benchmark.hip")
+    add_executable(hip-life-bench src/sim/benchmark.hip)
+    set_source_files_properties(src/sim/benchmark.hip PROPERTIES LANGUAGE HIP)
+    set_target_properties(hip-life-bench PROPERTIES HIP_ARCHITECTURES "${HIPLIFE_GFX_ARCH}")
+    target_link_libraries(hip-life-bench PRIVATE hiplife_core)
+endif()
 
 enable_testing()
 add_executable(hiplife_invariants tests/invariants.cpp)
