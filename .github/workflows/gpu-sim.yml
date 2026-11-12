@@ -1,0 +1,72 @@
+name: GPU Simulator
+
+# Optional, non-required check. The hosted runners have no GPU, so this builds
+# the HIP backend with hipcc for gfx942 and runs the CTest suite, including
+# `gpu_vs_cpu`, on a simulated AMD Instinct MI300X
+# (https://github.com/pantheongpu/pantheonsim). A simulator cannot reproduce
+# hardware-specific behavior or timing, so it complements real-GPU testing and
+# does not replace it.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "CMakeLists.txt"
+      - ".github/workflows/gpu-sim.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  gpu-vs-cpu:
+    name: gpu_vs_cpu (ROCm 7.1 and simulated MI300X)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
+
+      - name: Set up the simulated GPU and ROCm
+        uses: pantheongpu/setup-pantheonsim@ca87fe3143b29166822b923d6050945c5179408c # v0.1.5
+        with:
+          gpu: amd/mi300x
+          cuda-toolkit: none
+          rocm: "7.1"
+
+      # gfx942 is the MI300X; the default in CMakeLists.txt is gfx1152.
+      # raylib is not installed, so the interactive app is not built.
+      - name: Configure
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DHIPLIFE_GFX_ARCH=gfx942
+
+      # Naming the test targets makes the build fail if CMake found no HIP
+      # compiler and fell back to the CPU-only configuration.
+      - name: Build
+        run: cmake --build build --parallel 3 --target hiplife_invariants hiplife_gpu_vs_cpu
+
+      - name: Test
+        run: |
+          vgpu run ctest --test-dir build --no-tests=error --verbose \
+            | tee ctest.log
+
+      # gpu_vs_cpu prints "SKIP: no usable HIP device" and returns 0 when it
+      # finds no device, so require the line it prints after a real comparison.
+      - name: Check gpu_vs_cpu ran on the device
+        run: |
+          grep -q "GPU matches CPU reference across all cases" ctest.log
+          ! grep -q "SKIP" ctest.log
